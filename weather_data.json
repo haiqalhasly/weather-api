@@ -1,0 +1,8 @@
+{
+    "weather":[
+    {"city": "New York","temperature": 25, "condition" : "cloudy"},
+    {"city": "London","temperature": 20, "condition": "rainy"},
+    {"city": "Tokyo","temperature": 30, "condition": "sunny"},
+    {"city": "Paris","temperature": 22, "condition": "cloudy"}
+    ]
+}
