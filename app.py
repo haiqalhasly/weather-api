@@ -4,6 +4,9 @@ import requests
 from dotenv import load_dotenv
 import redis
 import json
+from datetime import timedelta
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -14,11 +17,17 @@ api_key = os.environ.get('API_KEY')
 
 app = Flask(__name__)
 
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    storage_uri="redis://localhost:6379",)
+
 @app.route('/')
 def welcome():
     return "Welcome to Weather!"
 
 @app.route('/<location>', methods = ['GET'])
+@limiter.limit('10 per day')
 def api_weather(location):
 
     weather_key = f"{location}_data"
@@ -36,6 +45,7 @@ def api_weather(location):
             current_conditions = weather_output['currentConditions'] 
 
             redis_client.set(weather_key, json.dumps(current_conditions))
+            redis_client.expire(weather_key, timedelta(hours=12))
             return jsonify(current_conditions)
         else:
             return 404
