@@ -18,15 +18,12 @@ app = Flask(__name__)
 def welcome():
     return "Welcome to Weather!"
 
-
-def get_weather(location):
-    
-
 @app.route('/<location>', methods = ['GET'])
 def api_weather(location):
 
     weather_key = f"{location}_data"
     weather_data = redis_client.get(weather_key)
+
 
     if weather_data is None:
         print("No data in cache, retrieving from API")  
@@ -36,15 +33,23 @@ def api_weather(location):
 
         if response.status_code == 200:
             weather_output = response.json()
-            weather_output = jsonify(weather_output)
-            redis_client.set(weather_key, json.dumps(weather_data))
-            return weather_output
+            current_conditions = weather_output['currentConditions'] 
+
+            redis_client.set(weather_key, json.dumps(current_conditions))
+            return jsonify(current_conditions)
         else:
             return 404
     else:
         print("data in cache, serving from Redis")
         weather_output = json.loads(weather_data)
-        return weather_output
+        return jsonify(weather_output)
+
+  # Flask will always ask for the browser icon for some reason, this will ignore it  
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204  # No Content
+
     
+
 if __name__ == '__main__':
     app.run(debug=True)
